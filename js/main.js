@@ -5,13 +5,18 @@ const ctx = canvas.getContext("2d");
 const circleCount = document.getElementById("circleCount");
 const countValue = document.getElementById("countValue");
 
-// Dimensiones (tu versión /2)
-let window_height = window.innerHeight / 2;
-let window_width = window.innerWidth / 2;
+const canvasWidth = document.getElementById("canvasWidth");
+const canvasHeight = document.getElementById("canvasHeight");
+const widthValue = document.getElementById("widthValue");
+const heightValue = document.getElementById("heightValue");
 
-canvas.height = window_height;
-canvas.width = window_width;
-canvas.style.background = "#ff8";
+// Límite máximo del canvas: 75% de la pantalla
+let maxCanvasW = Math.floor(window.innerWidth * 0.75);
+let maxCanvasH = Math.floor(window.innerHeight * 0.75);
+
+// Dimensiones actuales del canvas
+let window_width = 0;
+let window_height = 0;
 
 // ==========================
 // Utilidades
@@ -26,6 +31,10 @@ function shuffleArray(arr) {
 
 function randInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
 }
 
 // ==========================
@@ -91,55 +100,113 @@ class Circle {
 }
 
 // ==========================
-// Generación de círculos según slider
+// Generación / Estado
 // ==========================
 const maxCircles = 10;
 const colors = ["blue", "red", "green", "purple", "orange", "brown", "black", "teal", "magenta", "navy"];
-
 let circles = [];
 
+// Aplica tamaño al canvas, respetando límite 75% y mínimo 100px
+function aplicarDimensionesCanvas(w, h) {
+  const newW = clamp(w, 100, maxCanvasW);
+  const newH = clamp(h, 100, maxCanvasH);
+
+  canvas.width = newW;
+  canvas.height = newH;
+
+  window_width = newW;
+  window_height = newH;
+
+  // Refleja valores en UI
+  canvasWidth.value = String(newW);
+  canvasHeight.value = String(newH);
+  widthValue.textContent = String(newW);
+  heightValue.textContent = String(newH);
+}
+
 function generarCirculos(n) {
-  // 1) Direcciones únicas: 10 ángulos distintos, barajados
+  // Direcciones únicas: 10 ángulos diferentes, barajados
   let angles = Array.from({ length: maxCircles }, (_, i) => (i * (2 * Math.PI)) / maxCircles);
   angles = shuffleArray(angles);
 
-  // 2) Velocidades únicas: 10 valores distintos, barajados
+  // Velocidades únicas: 10 velocidades diferentes, barajadas
   let speeds = Array.from({ length: maxCircles }, (_, i) => 1.5 + i * 0.5);
   speeds = shuffleArray(speeds);
 
   const nuevos = [];
 
   for (let i = 0; i < n; i++) {
-    const radius = randInt(30, 80);
+    const rawRadius = randInt(30, 80);
 
-    // Posición inicial segura
+    // Si canvas es pequeño, ajustamos radio para garantizar que quepa
+    const maxAllowedRadius = Math.max(10, Math.floor(Math.min(window_width, window_height) / 4));
+    const radius = Math.min(rawRadius, maxAllowedRadius);
+
+    // Posición segura (no nace en márgenes)
     const x = Math.random() * (window_width - 2 * radius) + radius;
     const y = Math.random() * (window_height - 2 * radius) + radius;
 
-    const color = colors[i % colors.length];
-    const text = String(i + 1);
-    const speed = speeds[i];
-    const angleRad = angles[i];
-
-    nuevos.push(new Circle(x, y, radius, color, text, speed, angleRad));
+    nuevos.push(
+      new Circle(
+        x,
+        y,
+        radius,
+        colors[i % colors.length],
+        String(i + 1),
+        speeds[i],
+        angles[i]
+      )
+    );
   }
 
   circles = nuevos;
 }
 
 // ==========================
-// Eventos del slider
+// UI Sync
 // ==========================
-function syncUI() {
+function syncCirclesUI() {
   const n = parseInt(circleCount.value, 10);
   countValue.textContent = String(n);
   generarCirculos(n);
 }
 
-circleCount.addEventListener("input", syncUI);
+function syncCanvasUI() {
+  const w = parseInt(canvasWidth.value, 10);
+  const h = parseInt(canvasHeight.value, 10);
+  aplicarDimensionesCanvas(w, h);
+
+  // Regenerar para que ningún círculo quede fuera tras el cambio de tamaño
+  syncCirclesUI();
+}
+
+function initCanvasControls() {
+  maxCanvasW = Math.floor(window.innerWidth * 0.75);
+  maxCanvasH = Math.floor(window.innerHeight * 0.75);
+
+  canvasWidth.max = String(maxCanvasW);
+  canvasHeight.max = String(maxCanvasH);
+
+  // Valores iniciales seguros
+  const initialW = clamp(parseInt(canvasWidth.value || "520", 10), 100, maxCanvasW);
+  const initialH = clamp(parseInt(canvasHeight.value || "360", 10), 100, maxCanvasH);
+
+  aplicarDimensionesCanvas(initialW, initialH);
+}
+
+// Eventos
+circleCount.addEventListener("input", syncCirclesUI);
+canvasWidth.addEventListener("input", syncCanvasUI);
+canvasHeight.addEventListener("input", syncCanvasUI);
+
+window.addEventListener("resize", () => {
+  initCanvasControls();
+  syncCirclesUI();
+});
 
 // Inicial
-syncUI();
+initCanvasControls();
+syncCirclesUI();
 
 // ==========================
 // Animación
@@ -148,9 +215,7 @@ function updateScene() {
   requestAnimationFrame(updateScene);
   ctx.clearRect(0, 0, window_width, window_height);
 
-  for (const c of circles) {
-    c.update(ctx);
-  }
+  for (const c of circles) c.update(ctx);
 }
 
 updateScene();
