@@ -1,17 +1,37 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/png" sizes="32x32" href="./img/favicon.png">
-    <title>POO con Canvas</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" sizes="32x32" href="./img/favicon.png">
+  <title>Canvas - Círculos OOP</title>
+  <style>
+    body { margin: 0; overflow: hidden; font-family: Arial, sans-serif; }
+    #panel {
+      position: fixed;
+      top: 10px; left: 10px;
+      background: rgba(255,255,255,0.85);
+      padding: 12px 14px;
+      border-radius: 10px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+      z-index: 10;
+      min-width: 230px;
+    }
+    #panel label { display: block; font-weight: 600; margin-bottom: 6px; }
+    #panel .row { display: flex; align-items: center; gap: 10px; }
+    #countValue { font-weight: 700; min-width: 20px; text-align: right; }
+  </style>
 </head>
-
 <body>
-    <canvas id="canvas"></canvas>
+  <div id="panel">
+    <label for="circleCount">Número de círculos</label>
+    <div class="row">
+      <input type="range" id="circleCount" min="1" max="10" value="5" />
+      <span id="countValue">5</span>
+    </div>
+  </div>
 
-    <script src="js/main.js"></script>
+  <canvas id="canvas"></canvas>
+  <script src="./js/main.js"></script>
 </body>
-
 </html>
