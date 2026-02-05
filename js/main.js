@@ -2,8 +2,8 @@ const canvas = document.getElementById("canvas");
 let ctx = canvas.getContext("2d");
 
 //Obtiene las dimensiones de la pantalla actual
-const window_height = window.innerHeight;
-const window_width = window.innerWidth;
+const window_height = window.innerHeight/2;
+const window_width = window.innerWidth/2;
 
 //El canvas tiene las mismas dimensiones que la pantalla
 canvas.height = window_height;
@@ -18,11 +18,14 @@ class Circle {
     this.radius = radius;
     this.color = color;
     this.text = text;
-
     this.speed = speed;
 
-    this.dx = 1 * this.speed;
-    this.dy = 1 * this.speed;
+    // Dirección inicial aleatoria
+    const dirX = Math.random() < 0.5 ? -1 : 1;
+    const dirY = Math.random() < 0.5 ? -1 : 1;
+
+    this.dx = dirX * this.speed;
+    this.dy = dirY * this.speed;
   }
 
   draw(context) {
@@ -41,33 +44,36 @@ class Circle {
   }
 
   update(context) {
-    //context.clearRect(0, 0, window_width, window_height);
+  this.draw(context);
 
-    this.draw(context);
-
-    //Si el círculo supera el margen derecho entonces se mueve a la izquierda
-    if (this.posX + this.radius > window_width) {
-      this.dx = -this.dx;
-    }
-
-    //Si el círculo supera el margen izquierdo entonces se mueve a la derecha
-    if (this.posX - this.radius < 0) {
-      this.dx = -this.dx;
-    }
-
-    //Si el círculo supera el margen superior entonces se mueve hacia abajo
-    if (this.posY - this.radius < 0) {
-      this.dy = -this.dy;
-    }
-
-    //Si el círculo supera el margen inferior entonces se mueve hacia arriba
-    if (this.posY + this.radius > window_height) {
-      this.dy = -this.dy;
-    }
-
-    this.posX += this.dx;
-    this.posY += this.dy;
+  // Derecha
+  if (this.posX + this.radius > window_width) {
+    this.posX = window_width - this.radius;
+    this.dx = -this.dx;
   }
+
+  // Izquierda
+  if (this.posX - this.radius < 0) {
+    this.posX = this.radius;
+    this.dx = -this.dx;
+  }
+
+  // Arriba
+  if (this.posY - this.radius < 0) {
+    this.posY = this.radius;
+    this.dy = -this.dy;
+  }
+
+  // Abajo
+  if (this.posY + this.radius > window_height) {
+    this.posY = window_height - this.radius;
+    this.dy = -this.dy;
+  }
+
+  this.posX += this.dx;
+  this.posY += this.dy;
+}
+
 }
 
 /* let arrayCircle=[];
@@ -85,9 +91,10 @@ for(let i=0; i<10;i++){
     arrayCircle[i].draw(ctx);
 } */
 
-let randomX = Math.random() * window_width;
-let randomY = Math.random() * window_height;
 let randomRadius = Math.floor(Math.random() * 100 + 30);
+
+let randomX = Math.random() * (window_width - 2 * randomRadius) + randomRadius;
+let randomY = Math.random() * (window_height - 2 * randomRadius) + randomRadius;
 
 let miCirculo = new Circle(randomX, randomY, randomRadius, "blue", "Tec1", 5);
 miCirculo.draw(ctx);
